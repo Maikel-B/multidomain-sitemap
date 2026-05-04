@@ -1,0 +1,43 @@
+{
+    "name": "maikel-b/multidomain-sitemap",
+    "description": "Statamic addon that generates a separate, valid sitemap per locale/domain in a multisite setup. Reuses the SEO fields of aerni/advanced-seo.",
+    "type": "statamic-addon",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "maikel-b"
+        }
+    ],
+    "keywords": [
+        "statamic",
+        "sitemap",
+        "multidomain",
+        "multisite",
+        "seo"
+    ],
+    "require": {
+        "php": "^8.2",
+        "statamic/cms": "^5.0",
+        "laravel/framework": "^11.0",
+        "aerni/advanced-seo": "^2.13"
+    },
+    "autoload": {
+        "psr-4": {
+            "MaikelB\\MultidomainSitemap\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MaikelB\\MultidomainSitemap\\MultidomainSitemapServiceProvider"
+            ]
+        },
+        "statamic": {
+            "name": "Multidomain Sitemap",
+            "description": "Generates a valid sitemap per locale/domain in a Statamic multisite setup."
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "version": "1.0.0"
+}
