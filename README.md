@@ -66,6 +66,11 @@ with the following options:
   subdirectory matching the site handle.
 - `serve_from_cache` — when true (default), the controller serves a
   pre-rendered file from `path` if it exists, otherwise it renders on the fly.
+- `trailing_slash` — when true (default), every entry, term and taxonomy URL
+  emitted in the sitemap (both `<loc>` values and `hreflang` alternates) is
+  normalized to end with a trailing slash. Set to `false` to strip trailing
+  slashes (except for the root `/`). Match this to the canonical URL form
+  served by your site.
 
 ## Pre-generation
 

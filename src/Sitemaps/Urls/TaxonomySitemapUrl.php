@@ -5,6 +5,7 @@ namespace MaikelB\MultidomainSitemap\Sitemaps\Urls;
 use Aerni\AdvancedSeo\Models\Defaults;
 use Aerni\AdvancedSeo\Support\Helpers;
 use Illuminate\Support\Facades\Cache;
+use MaikelB\MultidomainSitemap\Support\UrlNormalizer;
 use Statamic\Contracts\Taxonomies\Taxonomy;
 use Statamic\Facades\Site;
 use Statamic\Sites\Site as SiteInstance;
@@ -17,7 +18,7 @@ class TaxonomySitemapUrl
     {
         Site::setCurrent($this->site->handle());
 
-        return $this->taxonomy->absoluteUrl();
+        return UrlNormalizer::normalize($this->taxonomy->absoluteUrl());
     }
 
     public function alternates(): ?array
@@ -36,7 +37,7 @@ class TaxonomySitemapUrl
             Site::setCurrent($siteHandle);
 
             return [
-                'href' => $this->taxonomy->absoluteUrl(),
+                'href' => UrlNormalizer::normalize($this->taxonomy->absoluteUrl()),
                 'hreflang' => Helpers::parseLocale(Site::current()->locale()),
             ];
         });
@@ -47,7 +48,7 @@ class TaxonomySitemapUrl
         Site::setCurrent($xDefaultSite);
 
         return $hreflang->push([
-            'href' => $this->taxonomy->absoluteUrl(),
+            'href' => UrlNormalizer::normalize($this->taxonomy->absoluteUrl()),
             'hreflang' => 'x-default',
         ])->values()->all();
     }

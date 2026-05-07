@@ -52,4 +52,19 @@ return [
 
     'serve_from_cache' => true,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Trailing Slash
+    |--------------------------------------------------------------------------
+    |
+    | When true, every entry, term and taxonomy URL emitted in the sitemap
+    | (both <loc> values and hreflang alternates) is normalized to end with
+    | a trailing slash. When false, any trailing slash is stripped (except
+    | for the root "/"). Use this to match the canonical URL style of your
+    | site so search engines index the same URL form they crawl.
+    |
+    */
+
+    'trailing_slash' => true,
+
 ];

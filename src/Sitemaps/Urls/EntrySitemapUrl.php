@@ -4,6 +4,7 @@ namespace MaikelB\MultidomainSitemap\Sitemaps\Urls;
 
 use Aerni\AdvancedSeo\Actions\IncludeInSitemap;
 use Aerni\AdvancedSeo\Support\Helpers;
+use MaikelB\MultidomainSitemap\Support\UrlNormalizer;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Facades\Site;
 
@@ -13,7 +14,7 @@ class EntrySitemapUrl
 
     public function loc(): string
     {
-        return $this->entry->absoluteUrl();
+        return UrlNormalizer::normalize($this->entry->absoluteUrl());
     }
 
     public function alternates(): ?array
@@ -38,7 +39,7 @@ class EntrySitemapUrl
         }
 
         $hreflang = $hreflang->map(fn ($model) => [
-            'href' => $model->absoluteUrl(),
+            'href' => UrlNormalizer::normalize($model->absoluteUrl()),
             'hreflang' => Helpers::parseLocale($model->site()->locale()),
         ]);
 
@@ -47,7 +48,7 @@ class EntrySitemapUrl
         $xDefault = IncludeInSitemap::run($origin) ? $origin : $this->entry;
 
         return $hreflang->push([
-            'href' => $xDefault->absoluteUrl(),
+            'href' => UrlNormalizer::normalize($xDefault->absoluteUrl()),
             'hreflang' => 'x-default',
         ])->values()->all();
     }
