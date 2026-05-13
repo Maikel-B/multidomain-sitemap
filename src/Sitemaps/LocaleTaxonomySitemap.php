@@ -50,19 +50,15 @@ class LocaleTaxonomySitemap extends BaseLocaleSitemap
 
     protected function termUrls(): Collection
     {
-        $terms = $this->taxonomy->queryTerms()
+        return $this->taxonomy->queryTerms()
             ->where('site', $this->site->handle())
             ->where('published', true)
             ->whereNotNull('uri')
             ->get()
-            ->filter(fn ($term) => IncludeInSitemap::run($term));
-
-        $first = $terms->first();
-        if (! $first || ! view()->exists($first->template())) {
-            return collect();
-        }
-
-        return $terms->map(fn ($term) => new TermSitemapUrl($term))->values();
+            ->filter(fn ($term) => IncludeInSitemap::run($term))
+            ->filter(fn ($term) => view()->exists($term->template()))
+            ->map(fn ($term) => new TermSitemapUrl($term))
+            ->values();
     }
 
     /**
