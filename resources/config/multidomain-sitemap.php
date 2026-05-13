@@ -67,4 +67,23 @@ return [
 
     'trailing_slash' => true,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Strip Locale Path Prefix
+    |--------------------------------------------------------------------------
+    |
+    | When true, the path prefix from the current site's URL (e.g. "/uk" for
+    | a site configured at "https://example.test/uk") is stripped from every
+    | <loc> and hreflang href emitted in the sitemap. Per-domain sites
+    | (https://tools4ever.co.uk) have no prefix so this is a no-op there.
+    |
+    | Useful when a path-prefix staging environment needs to preview the
+    | clean per-domain URLs that production will emit. Defaults to false so
+    | sitemap URLs always match the URLs that actually resolve in the current
+    | environment.
+    |
+    */
+
+    'strip_locale_prefix' => env('MULTIDOMAIN_SITEMAP_STRIP_LOCALE_PREFIX', false),
+
 ];
