@@ -25,7 +25,9 @@ class GenerateSitemapsCommand extends Command
         // generated files are then served as static cache for HTTP requests.
         // Page rendering on the same process keeps the original list.
         $this->withCrawlingEnvironmentWidened(function () {
-            $this->runGeneration();
+            $this->withCurrentSiteRestored(function () {
+                $this->runGeneration();
+            });
         });
 
         $this->info('Done.');
@@ -58,6 +60,25 @@ class GenerateSitemapsCommand extends Command
                 $this->line('  - '.$sitemap->filename());
                 $sitemap->save();
             }
+        }
+    }
+
+    /**
+     * Site::setCurrent() mutates a process-global. When the cron loops over
+     * every locale and then exits, the last site's handle persists — any
+     * subsequent code in the same PHP process (queue worker, another
+     * scheduled command sharing the runtime, an Octane worker between
+     * requests) sees the wrong current site. Snapshot and restore so the
+     * command leaves no trace.
+     */
+    protected function withCurrentSiteRestored(callable $callback): void
+    {
+        $original = Site::current()->handle();
+
+        try {
+            $callback();
+        } finally {
+            Site::setCurrent($original);
         }
     }
 
