@@ -47,19 +47,31 @@ class GenerateSitemapsCommand extends Command
             return;
         }
 
+        $failed = [];
+
         foreach ($sites as $site) {
             $this->info("Generating sitemap for site [{$site->handle()}]...");
 
-            Site::setCurrent($site->handle());
+            try {
+                Site::setCurrent($site->handle());
 
-            $index = new LocaleSitemapIndex($site);
+                $index = new LocaleSitemapIndex($site);
 
-            $index->save();
+                $index->save();
 
-            foreach ($index->sitemaps() as $sitemap) {
-                $this->line('  - '.$sitemap->filename());
-                $sitemap->save();
+                foreach ($index->sitemaps() as $sitemap) {
+                    $this->line('  - '.$sitemap->filename());
+                    $sitemap->save();
+                }
+            } catch (\Throwable $e) {
+                $failed[$site->handle()] = $e->getMessage();
+                $this->error("  failed: {$e->getMessage()}");
+                report($e);
             }
+        }
+
+        if (! empty($failed)) {
+            $this->warn('Sitemap generation completed with failures on '.count($failed).' site(s): '.implode(', ', array_keys($failed)));
         }
     }
 
