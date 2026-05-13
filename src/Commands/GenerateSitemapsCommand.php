@@ -3,6 +3,7 @@
 namespace MaikelB\MultidomainSitemap\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use MaikelB\MultidomainSitemap\Sitemaps\LocaleSitemapIndex;
 use Statamic\Facades\Site;
 
@@ -15,6 +16,25 @@ class GenerateSitemapsCommand extends Command
 
     public function handle(): int
     {
+        // aerni/advanced-seo gates IncludeInSitemap behind
+        // advanced-seo.crawling.environments — which is also the list that
+        // controls whether pages emit noindex,nofollow robots meta. We MUST
+        // NOT widen that list project-wide on staging (it would let crawlers
+        // index staging pages). Instead, widen it only for the duration of
+        // this command so the in-memory generator can produce real XML; the
+        // generated files are then served as static cache for HTTP requests.
+        // Page rendering on the same process keeps the original list.
+        $this->withCrawlingEnvironmentWidened(function () {
+            $this->runGeneration();
+        });
+
+        $this->info('Done.');
+
+        return self::SUCCESS;
+    }
+
+    protected function runGeneration(): void
+    {
         $sites = $this->option('site')
             ? collect([Site::get($this->option('site'))])->filter()
             : Site::all();
@@ -22,7 +42,7 @@ class GenerateSitemapsCommand extends Command
         if ($sites->isEmpty()) {
             $this->error('No sites found.');
 
-            return self::FAILURE;
+            return;
         }
 
         foreach ($sites as $site) {
@@ -35,13 +55,26 @@ class GenerateSitemapsCommand extends Command
             $index->save();
 
             foreach ($index->sitemaps() as $sitemap) {
-                $this->line("  - ".$sitemap->filename());
+                $this->line('  - '.$sitemap->filename());
                 $sitemap->save();
             }
         }
+    }
 
-        $this->info('Done.');
+    protected function withCrawlingEnvironmentWidened(callable $callback): void
+    {
+        $key = 'advanced-seo.crawling.environments';
+        $original = Config::get($key, []);
+        $current = app()->environment();
 
-        return self::SUCCESS;
+        if (! in_array($current, $original, true)) {
+            Config::set($key, array_values(array_unique([...$original, $current])));
+        }
+
+        try {
+            $callback();
+        } finally {
+            Config::set($key, $original);
+        }
     }
 }
