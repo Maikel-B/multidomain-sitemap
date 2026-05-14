@@ -4,6 +4,7 @@ namespace MaikelB\MultidomainSitemap\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use MaikelB\MultidomainSitemap\Sitemaps\LocaleSitemapIndex;
 use Statamic\Facades\Site;
 
@@ -68,8 +69,15 @@ class GenerateSitemapsCommand extends Command
             } catch (\Throwable $e) {
                 $failed[$site->handle()] = $e->getMessage();
                 $this->error("  failed: {$e->getMessage()}");
-                // Fires Laravel's exception handler — routed to Sentry / log
-                // driver / whatever the project configured.
+
+                // Tagged log line so grep-by-site works in laravel.log and
+                // the site handle shows up as searchable context in Sentry.
+                // The raw exception (with full stack trace) still goes via
+                // report() so it groups normally in the exception tracker.
+                Log::error("multidomain-sitemap generation failed for site [{$site->handle()}]: {$e->getMessage()}", [
+                    'site' => $site->handle(),
+                    'exception' => $e,
+                ]);
                 report($e);
             }
         }
