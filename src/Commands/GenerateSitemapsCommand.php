@@ -24,18 +24,20 @@ class GenerateSitemapsCommand extends Command
         // this command so the in-memory generator can produce real XML; the
         // generated files are then served as static cache for HTTP requests.
         // Page rendering on the same process keeps the original list.
-        $this->withCrawlingEnvironmentWidened(function () {
-            $this->withCurrentSiteRestored(function () {
-                $this->runGeneration();
+        $exitCode = self::SUCCESS;
+
+        $this->withCrawlingEnvironmentWidened(function () use (&$exitCode) {
+            $this->withCurrentSiteRestored(function () use (&$exitCode) {
+                $exitCode = $this->runGeneration();
             });
         });
 
         $this->info('Done.');
 
-        return self::SUCCESS;
+        return $exitCode;
     }
 
-    protected function runGeneration(): void
+    protected function runGeneration(): int
     {
         $sites = $this->option('site')
             ? collect([Site::get($this->option('site'))])->filter()
@@ -44,7 +46,7 @@ class GenerateSitemapsCommand extends Command
         if ($sites->isEmpty()) {
             $this->error('No sites found.');
 
-            return;
+            return self::FAILURE;
         }
 
         $failed = [];
@@ -66,13 +68,24 @@ class GenerateSitemapsCommand extends Command
             } catch (\Throwable $e) {
                 $failed[$site->handle()] = $e->getMessage();
                 $this->error("  failed: {$e->getMessage()}");
+                // Fires Laravel's exception handler — routed to Sentry / log
+                // driver / whatever the project configured.
                 report($e);
             }
         }
 
         if (! empty($failed)) {
             $this->warn('Sitemap generation completed with failures on '.count($failed).' site(s): '.implode(', ', array_keys($failed)));
+
+            // Non-zero exit so Laravel's scheduler logs this as a failed run
+            // and any cron-health monitor (uptime checks, healthchecks.io,
+            // schedule:list watcher) flags it. Sites that succeeded still
+            // have fresh files in storage; only the failed sites' caches
+            // remain stale, which degrades gracefully.
+            return self::FAILURE;
         }
+
+        return self::SUCCESS;
     }
 
     /**
