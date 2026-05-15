@@ -4,7 +4,6 @@ namespace MaikelB\MultidomainSitemap\Sitemaps\Urls;
 
 use Aerni\AdvancedSeo\Models\Defaults;
 use Aerni\AdvancedSeo\Support\Helpers;
-use Illuminate\Support\Facades\Cache;
 use MaikelB\MultidomainSitemap\Support\UrlNormalizer;
 use Statamic\Contracts\Taxonomies\Taxonomy;
 use Statamic\Facades\Site;
@@ -53,23 +52,14 @@ class TaxonomySitemapUrl
         ])->values()->all();
     }
 
-    public function lastmod(): string
+    public function lastmod(): ?string
     {
         $term = $this->taxonomy->queryTerms()
             ->where('site', $this->site->handle())
             ->orderByDesc('last_modified')
             ->first();
 
-        if ($term) {
-            Cache::forget("maikel-b.multidomain-sitemap.taxonomy.{$this->taxonomy->handle()}.{$this->site->handle()}.lastmod");
-
-            return $term->lastModified()->format('Y-m-d\TH:i:sP');
-        }
-
-        return Cache::rememberForever(
-            "maikel-b.multidomain-sitemap.taxonomy.{$this->taxonomy->handle()}.{$this->site->handle()}.lastmod",
-            fn () => now()->format('Y-m-d\TH:i:sP')
-        );
+        return $term?->lastModified()->format('Y-m-d\TH:i:sP');
     }
 
     public function changefreq(): ?string

@@ -29,6 +29,7 @@ class LocaleCollectionSitemap extends BaseLocaleSitemap
             return $this->entries()
                 ->map(fn ($entry) => new EntrySitemapUrl($entry))
                 ->filter(fn (EntrySitemapUrl $url) => $url->canonicalTypeIsCurrent())
+                ->unique(fn (EntrySitemapUrl $url) => $url->loc())
                 ->values();
         });
     }
